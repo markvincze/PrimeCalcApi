@@ -6,24 +6,28 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace PrimeCalcApi.WebService.Controllers
 {
     [Route("[controller]")]
     public class PrimeController : Controller
     {
-        private readonly IHttpContextAccessor httpContextAccessor; 
         private static readonly Random rnd = new Random();
+        private readonly IHttpContextAccessor httpContextAccessor; 
+        private readonly IOptions<PrimeOptions> primeOptions;
 
-        public PrimeController(IHttpContextAccessor httpContextAccessor)
+        public PrimeController(IHttpContextAccessor httpContextAccessor, IOptions<PrimeOptions> primeOptions)
         {
             this.httpContextAccessor = httpContextAccessor;
+            this.primeOptions = primeOptions;
         }
         
         [HttpGet]
         public IActionResult Get()
         {
-            var elapsed = FakeCpuIntensiveWork(rnd.Next(10000, 300000), httpContextAccessor.HttpContext.RequestAborted);
+            Console.WriteLine("Prime MaxValue: {0}", primeOptions.Value.MaxValue);
+            var elapsed = FakeCpuIntensiveWork(rnd.Next(10000, primeOptions.Value.MaxValue), httpContextAccessor.HttpContext.RequestAborted);
             return Ok($"Calculating primes took {elapsed}");
         }
 

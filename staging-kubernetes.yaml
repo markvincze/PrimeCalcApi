@@ -81,6 +81,9 @@ spec:
         ports:
         - name: http-direct
           containerPort: 5000
+        env:
+        - name: "Prime__MaxValue"
+          value: "80000"
         livenessProbe:
           httpGet:
             path: /status
