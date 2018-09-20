@@ -14,7 +14,7 @@ namespace PrimeCalcApi.WebService.Controllers
     public class PrimeController : Controller
     {
         private static readonly Random rnd = new Random();
-        private readonly IHttpContextAccessor httpContextAccessor; 
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IOptions<PrimeOptions> primeOptions;
 
         public PrimeController(IHttpContextAccessor httpContextAccessor, IOptions<PrimeOptions> primeOptions)
@@ -22,20 +22,35 @@ namespace PrimeCalcApi.WebService.Controllers
             this.httpContextAccessor = httpContextAccessor;
             this.primeOptions = primeOptions;
         }
-        
+
         [HttpGet]
         public IActionResult Get()
         {
-            Console.WriteLine("Prime MaxValue: {0}", primeOptions.Value.MaxValue);
-            var elapsed = FakeCpuIntensiveWork(rnd.Next(10000, primeOptions.Value.MaxValue), httpContextAccessor.HttpContext.RequestAborted);
-            return Ok($"Calculating primes took {elapsed}");
+            try
+            {
+                Startup.PrimeRequestInFlightMetric.Inc(1);
+                var elapsed = FakeCpuIntensiveWork(rnd.Next(10000, primeOptions.Value.MaxValue), httpContextAccessor.HttpContext.RequestAborted);
+                return Ok($"Calculating primes took {elapsed}");
+            }
+            finally
+            {
+                Startup.PrimeRequestInFlightMetric.Dec(1);
+            }
         }
 
         [HttpGet("{n}")]
         public IActionResult Get(int n)
         {
-            var elapsed = FakeCpuIntensiveWork(n, httpContextAccessor.HttpContext.RequestAborted);
-            return Ok($"Calculating primes took {elapsed}");
+            try
+            {
+                Startup.PrimeRequestInFlightMetric.Inc(1);
+                var elapsed = FakeCpuIntensiveWork(n, httpContextAccessor.HttpContext.RequestAborted);
+                return Ok($"Calculating primes took {elapsed}");
+            }
+            finally
+            {
+                Startup.PrimeRequestInFlightMetric.Dec(1);
+            }
         }
 
         private static TimeSpan FakeCpuIntensiveWork(int n) => FakeCpuIntensiveWork(n, CancellationToken.None);

@@ -70,7 +70,8 @@ spec:
     spec:
       containers:
       - name: primecalcapi
-        image: markvincze/primecalcapi:1
+        image: markvincze/primecalcapi:3
+        imagePullPolicy: Always
         resources:
           limits:
             cpu: 100m

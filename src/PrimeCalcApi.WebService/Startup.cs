@@ -11,11 +11,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Prometheus;
 
 namespace PrimeCalcApi.WebService
 {
     public class Startup
     {
+        public static Gauge PrimeRequestInFlightMetric = Metrics.CreateGauge("prime_requests_in_flight", "");
+
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -24,6 +27,8 @@ namespace PrimeCalcApi.WebService
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
+
+            PrimeRequestInFlightMetric.Set(0);
         }
 
         public IConfiguration Configuration { get; }
@@ -39,6 +44,7 @@ namespace PrimeCalcApi.WebService
         {
             loggerFactory.AddConsole();
 
+            app.UseMetricServer();
             app.UseMvc();
         }
     }
